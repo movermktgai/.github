@@ -1,0 +1,48 @@
+name: Bug report
+description: Report broken behavior, layout problems, or unexpected output.
+title: "[Bug]: "
+labels: ["type: bug", "status: triage"]
+body:
+  - type: input
+    id: route-or-area
+    attributes:
+      label: Affected URL, route, or area
+      placeholder: https://example.com/page/ or src/pages/example.astro
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the issue and what you expected instead. Do not include secrets, credentials, private customer data, or webhook URLs.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: false
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Production
+        - Preview/deployed branch
+        - Local dev server
+        - GitHub Actions
+        - Unknown
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Add screenshots, non-secret logs, HTTP status output, or validation output.
+    validations:
+      required: false

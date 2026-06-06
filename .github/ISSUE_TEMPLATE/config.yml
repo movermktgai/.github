@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/movermktgai/.github/security/policy
+    about: Report vulnerabilities privately; do not open issues with secrets or exploit details.
+  - name: Organization profile
+    url: https://github.com/movermktgai
+    about: Visit the Mover Marketing AI organization profile.

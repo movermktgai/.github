@@ -1,0 +1,50 @@
+name: Deployment or runtime issue
+description: Report hosting, deployment, redirect, form, API, or CI problems.
+title: "[Deploy]: "
+labels: ["type: deploy", "status: triage"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Hosting/deployment
+        - Redirects
+        - Form or API endpoint
+        - GitHub Actions
+        - Local preview
+        - DNS/domain
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment or URL
+      placeholder: production, preview, local, or URL
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is failing?
+      description: Include non-secret error output or HTTP status details.
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Commands or checks run
+      placeholder: |
+        npm run build
+        curl -I --max-redirs 0 ...
+    validations:
+      required: false
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed secrets, tokens, webhook URLs, and private customer data.
+          required: true
+        - label: Redirect changes will be verified with deployed no-follow HTTP checks.
