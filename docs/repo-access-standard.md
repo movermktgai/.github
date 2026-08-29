@@ -1,40 +1,81 @@
 # movermktgai Repo Access & Protection Standard
 
-Last updated: 2026-08-05 (supersedes the old "everyone pull-only" standard)
+Last updated: 2026-08-29 (supersedes the old `repo_class`-only "site vs tool" standard)
 
 ## Model
 
-Everyone on the team can open PRs against every repo. What differs is **whose approval unlocks the merge button** on the default branch. Gating is done by org-level rulesets keyed on a repository custom property — never by limiting push access.
+Everyone on the team can open PRs against every repo. What differs is **whose approval unlocks the merge button** on the default branch. Gating is done by org-level rulesets keyed on the `site_stage` custom property, plus one universal safety-rail ruleset. Never limit merge by withholding push access.
 
-| | `repo_class=site` | `repo_class=tool` |
+Every repo must carry **three** classification properties:
+
+| Property | Type | Values |
 |---|---|---|
-| Repos | Client sites + agency-owned sites (mmai-website, localmovershq, movingcompanyhq, mmai-client-site-template) | Internal tools/infra (searchlight, mmai-ads, mmai-forms, mmai-calendar-booking, mmai-deployment-manifest, mmai-technical-seo-audit-agent, mover-marketing-video, .github) |
-| Team access | `push` via dev-team / content-editors / seo-editors | same |
-| Merge to main | PR + 1 approval — any team member can approve | PR + approval from CODEOWNERS (`@Noctivoro`) |
-| Direct push / force-push / delete main | blocked | blocked |
-| Maintainer (Noctivoro) | bypass | bypass |
+| `repo_class` | single_select | `site`, `tool` |
+| `site_stage` | single_select | `production`, `launching`, `preview`, `in_progress`, `template`, `not_site`, `open_internal` |
+| `repo_steward` | string | GitHub username of the accountable owner (e.g. `Noctivoro`, `princexiaooo`) |
 
-## Enforcement
+## Enforcement — org rulesets (all scoped to the default branch)
 
-Two org-level rulesets do all the work. They key off the `repo_class` custom property, so tagging a repo is sufficient — no ruleset edits per repo.
+| `site_stage` | Ruleset | Gate |
+|---|---|---|
+| `~ALL` (every repo) | All repositories default-branch safety rails (`20787773`) | no force-push / delete |
+| `launching`, `production` | Production site pull request protection (`17349407`) | PR + 1 approval + **code-owner review** + required status check **"MMAI Production Governance"** |
+| `not_site`, `template` | Internal tools and template maintainer review gate (`20673016`) | PR + 1 approval + **code-owner review** |
+| `preview`, `in_progress` | Non-production site direct-write safety rails (`20530156`) | no force-push / delete only |
+| `open_internal` | Open internal direct-write safety rails (`20673798`) | no force-push / delete only |
 
-- **Production site pull request protection** (org ruleset `17349407`) → `repo_class=tool`: PR required, 1 approving review, code-owner review, stale-review dismissal, thread resolution, no force-push/delete.
-- **Non-production site direct-write safety rails** (org ruleset `17988933`) → `repo_class=site`: no force-push/delete only.
-- Tool repos carry `.github/CODEOWNERS` containing `* @Noctivoro`.
+The PR-gated rulesets also enforce: stale-review dismissal, required review-thread resolution, and `require_extra_approval_for_unattributed_changes`.
+
+## Team access
+
+All three standard teams get `push` on every repo:
+
+- `dev-team`
+- `content-editors`
+- `seo-editors`
+
+Gating is done by rulesets, never by withholding push access. `push` only enables branch-pushing and PR-opening; it does not weaken merge protection.
+
+## CODEOWNERS (load-bearing)
+
+Repos gated by `require_code_owner_review` — `site_stage ∈ {not_site, template, launching, production}` — must carry `.github/CODEOWNERS` with:
+
+```
+* @Noctivoro
+```
+
+If the file is missing, the code-owner-review rule silently degrades to "any team approval unlocks merge". The onboarding script adds it for gated stages.
+
+## Maintainer bypass
+
+The `maintainers` team (currently only `Noctivoro`) is the bypass actor (`bypass_mode: always`) on the two PR-gated rulesets. Bypass covers the PR/approval requirement only — `non_fast_forward` still blocks force-push on protected branches.
 
 ## Onboarding a new repo
 
 One command (requires `gh` with org admin):
 
 ```bash
-./scripts/onboard-repo.sh <repo-name> <site|tool>
+./scripts/onboard-repo.sh <repo-name> <site|tool> <site_stage> <repo_steward>
 ```
 
-It tags `repo_class`, attaches the three standard teams at `push`, and for `tool` repos commits `.github/CODEOWNERS` if missing. The org rulesets pick the repo up automatically once tagged.
+Example:
+
+```bash
+./scripts/onboard-repo.sh mmai-tracking tool open_internal princexiaooo
+./scripts/onboard-repo.sh falcon-moving site production Noctivoro
+```
+
+It sets all three properties, attaches the three teams at `push`, and commits `.github/CODEOWNERS` when the stage is PR-gated. The org rulesets pick the repo up automatically once `site_stage` is set.
+
+`site_stage` values by class:
+
+- `site`: `preview`, `in_progress` (direct-write) → `launching`, `production` (PR + status check)
+- `tool`: `open_internal` (direct-write) → `not_site`, `template` (PR + code-owner review)
 
 ## Caveats
 
-- **Team members must not approve their own PRs' gatekeepers away**: on `site` repos any team member can approve+merge — that's intentional for client-site velocity. Review quality is cultural, not enforced.
-- **CODEOWNERS on tool repos is the load-bearing piece**: if a tool repo loses `.github/CODEOWNERS`, any team approval unlocks merge. The onboarding script checks for it; `require_code_owner_review` silently degrades without the file.
-- The old `site_stage` property is still present but no longer gates anything.
-- Deploy/workflow secrets stay in GitHub Actions secrets or Keychain; team `push` access does not grant secret access, but anyone with `push` can read workflow files — keep production deploy workflows gated by environment protection rules where they exist.
+- **On `site` repos in `preview`/`in_progress`, any team member can push directly** — intentional for client-site velocity. Review quality is cultural, not enforced. `launching`/`production` sites regain the PR + status-check gate.
+- **CODEOWNERS is the load-bearing piece** on gated repos — verify the file exists after tagging, not just the ruleset.
+- **Production sites** additionally require the `"MMAI Production Governance"` status check (integration_id `15368`), provided by the deploy workflow and driven by `/ops/production-site.json` + the `@movermktgai/deployment-manifest` package.
+- The legacy `repo_class` property is still recorded (coarse class) but no ruleset keys on it — `site_stage` is what gates.
+- Deploy/workflow secrets stay in GitHub Actions secrets or Keychain. Team `push` does not grant secret access, but anyone with `push` can read workflow files — keep production deploy workflows gated by environment protection where they exist.
