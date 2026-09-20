@@ -1,1 +1,3 @@
-* @Noctivoro @movermktgai/maintainers
+# Any maintainer or dev-team member can approve merges.
+# The PR author cannot approve their own PR; the org ruleset requires one approval.
+* @Noctivoro @movermktgai/maintainers @movermktgai/dev-team
