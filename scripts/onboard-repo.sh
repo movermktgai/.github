@@ -17,12 +17,14 @@ CODEOWNERS_BODY='* @Noctivoro'
 
 SITE_STAGES=(preview in_progress launching production)
 TOOL_STAGES=(not_site template open_internal)
+APP_STAGES=(preview in_progress launching production)
 CODEOWNERS_STAGES=(not_site template launching production)
 
 if [[ $# -ne 4 ]]; then
-  echo "usage: $0 <repo-name> <site|tool> <site_stage> <repo_steward>" >&2
+  echo "usage: $0 <repo-name> <site|tool|app> <site_stage> <repo_steward>" >&2
   echo "  site_stage (site):  ${SITE_STAGES[*]}" >&2
   echo "  site_stage (tool):  ${TOOL_STAGES[*]}" >&2
+  echo "  site_stage (app):   ${APP_STAGES[*]}" >&2
   echo "  repo_steward:       GitHub username of the accountable owner" >&2
   exit 2
 fi
@@ -32,12 +34,12 @@ CLASS="$2"
 STAGE="$3"
 STEWARD="$4"
 
-if [[ "$CLASS" != "site" && "$CLASS" != "tool" ]]; then
-  echo "error: repo_class must be 'site' or 'tool'" >&2
+if [[ "$CLASS" != "site" && "$CLASS" != "tool" && "$CLASS" != "app" ]]; then
+  echo "error: repo_class must be 'site', 'tool', or 'app'" >&2
   exit 2
 fi
 
-if [[ "$CLASS" == "site" ]]; then
+if [[ "$CLASS" == "site" || "$CLASS" == "app" ]]; then
   valid="${SITE_STAGES[*]}"
 else
   valid="${TOOL_STAGES[*]}"
