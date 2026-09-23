@@ -1,6 +1,6 @@
 # movermktgai Repo Access & Protection Standard
 
-Last updated: 2026-08-29 (supersedes the old `repo_class`-only "site vs tool" standard)
+Last updated: 2026-09-23 (adds `app` repo_class)
 
 ## Model
 
@@ -10,7 +10,7 @@ Every repo must carry **three** classification properties:
 
 | Property | Type | Values |
 |---|---|---|
-| `repo_class` | single_select | `site`, `tool` |
+| `repo_class` | single_select | `site`, `tool`, `app` |
 | `site_stage` | single_select | `production`, `launching`, `preview`, `in_progress`, `template`, `not_site`, `open_internal` |
 | `repo_steward` | string | GitHub username of the accountable owner (e.g. `Noctivoro`, `princexiaooo`) |
 
@@ -55,7 +55,7 @@ The `maintainers` team (currently only `Noctivoro`) is the bypass actor (`bypass
 One command (requires `gh` with org admin):
 
 ```bash
-./scripts/onboard-repo.sh <repo-name> <site|tool> <site_stage> <repo_steward>
+./scripts/onboard-repo.sh <repo-name> <site|tool|app> <site_stage> <repo_steward>
 ```
 
 Example:
@@ -71,6 +71,7 @@ It sets all three properties, attaches the three teams at `push`, and commits `.
 
 - `site`: `preview`, `in_progress` (direct-write) → `launching`, `production` (PR + status check)
 - `tool`: `open_internal` (direct-write) → `not_site`, `template` (PR + code-owner review)
+- `app`: `preview`, `in_progress` (direct-write) → `launching`, `production` (PR + status check; interactive web apps that plug into client sites — quote forms, embedded widgets — are not marketing sites and carry no sitemap/IndexNow/Searchlight contract)
 
 ## Caveats
 
